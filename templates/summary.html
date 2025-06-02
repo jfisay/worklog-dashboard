@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weekly Summaries</title>
+</head>
+<body>
+    <h1>📋 Weekly Summaries</h1>
+    <ul>
+        {% for s in summaries %}
+            <li>
+                <strong>{{ s[0] }} - {{ s[1] }}</strong><br>
+                {{ s[2] }}
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="/">🔙 Back to Logs</a>
+</body>
+</html>

@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: fastapi-worklog
+    env: python
+    buildCommand: ""
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+    plan: free
+    envVars:
+      - key: DB_HOST
+        value: worklog-db.cr6mewukevlp.us-east-2.rds.amazonaws.com
+      - key: DB_USER
+        value: admin
+      - key: DB_PASSWORD
+        value: Omomrb123#!!
+      - key: DB_NAME
+        value: worklog
+      - key: OPENAI_API_KEY
+        value: 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

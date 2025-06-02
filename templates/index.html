@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Daily Logs</title>
+</head>
+<body>
+    <h1>📅 Daily Work Logs</h1>
+    <ul>
+        {% for log in logs %}
+            <li><strong>{{ log[0] }}</strong>: {{ log[1] }}</li>
+        {% endfor %}
+    </ul>
+    <a href="/summaries">📋 View Weekly Summaries</a>
+</body>
+</html>
