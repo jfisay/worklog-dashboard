@@ -11,8 +11,8 @@ services:
       - key: DB_USER
         value: admin
       - key: DB_PASSWORD
-        value: Omomrb123#!!
+        value: <SET_IN_RENDER_DASHBOARD>
       - key: DB_NAME
         value: worklog
       - key: OPENAI_API_KEY
-        value: <SET_THIS_IN_RENDER_DASHBOARD>
+        value: <SET_IN_RENDER_DASHBOARD>
