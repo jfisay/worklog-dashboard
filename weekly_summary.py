@@ -8,7 +8,7 @@ import os
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def fetch_weekly_logs():
+def fetch_weekly_logs(username):
     conn = mysql.connector.connect(
         host=os.getenv("DB_HOST"),
         user=os.getenv("DB_USER"),
@@ -17,8 +17,8 @@ def fetch_weekly_logs():
     )
     cursor = conn.cursor()
     start_of_week = datetime.today() - timedelta(days=datetime.today().weekday())  # Monday
-    sql = "SELECT entry FROM daily_logs WHERE log_date >= %s"
-    cursor.execute(sql, (start_of_week.date(),))
+    sql = "SELECT entry FROM daily_logs WHERE log_date >= %s AND username = %s"
+    cursor.execute(sql, (start_of_week.date(), username))
     entries = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -42,17 +42,7 @@ def summarize_logs(log_text):
 
     return response['choices'][0]['message']['content']
 
-if __name__ == "__main__":
-    logs = fetch_weekly_logs()
-    if not logs.strip():
-        print("⚠️ No logs found for this week.")
-    else:
-        summary = summarize_logs(logs)
-        print("\n📋 Weekly Summary:\n")
-        print(summary)
-
-
-def save_summary_to_db(summary, start_date, end_date):
+def save_summary_to_db(summary, start_date, end_date, username):
     conn = mysql.connector.connect(
         host=os.getenv("DB_HOST"),
         user=os.getenv("DB_USER"),
@@ -60,15 +50,25 @@ def save_summary_to_db(summary, start_date, end_date):
         database=os.getenv("DB_NAME")
     )
     cursor = conn.cursor()
-    sql = "INSERT INTO weekly_summaries (week_start, week_end, summary) VALUES (%s, %s, %s)"
-    cursor.execute(sql, (start_date, end_date, summary))
+    sql = "INSERT INTO weekly_summaries (week_start, week_end, summary, username) VALUES (%s, %s, %s, %s)"
+    cursor.execute(sql, (start_date, end_date, summary, username))
     conn.commit()
     cursor.close()
     conn.close()
 
-# Add this at the bottom after printing summary
-start_of_week = datetime.today() - timedelta(days=datetime.today().weekday())
-end_of_week = start_of_week + timedelta(days=6)
-
-save_summary_to_db(summary, start_of_week.date(), end_of_week.date())
-print("💾 Summary saved to database.")
+if __name__ == "__main__":
+    username = input("Enter username to summarize logs for: ").strip()
+    logs = fetch_weekly_logs(username)
+    
+    if not logs.strip():
+        print("⚠️ No logs found for this week.")
+    else:
+        summary = summarize_logs(logs)
+        print("\n📋 Weekly Summary:\n")
+        print(summary)
+        
+        # Save to DB
+        start_of_week = datetime.today() - timedelta(days=datetime.today().weekday())
+        end_of_week = start_of_week + timedelta(days=6)
+        save_summary_to_db(summary, start_of_week.date(), end_of_week.date(), username)
+        print("💾 Summary saved to database.")

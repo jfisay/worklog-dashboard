@@ -1,15 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Daily Logs</title>
+    <title>Worklog Dashboard</title>
+    <script>
+        // Auto-fill today's date on page load
+        window.onload = function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("log_date").value = today;
+        };
+    </script>
 </head>
 <body>
-    <h1>📅 Daily Work Logs</h1>
+    <h2>Welcome to Your Dashboard</h2>
+
+    <!-- Weekly Input Form -->
+    <form action="/log" method="post">
+        <label for="log_date">Date:</label>
+        <input type="date" id="log_date" name="log_date" required><br><br>
+
+        <label for="entry">What did you do this week?</label><br>
+        <textarea name="entry" rows="6" cols="60" required></textarea><br><br>
+
+        <input type="submit" value="Submit Log">
+    </form>
+
+    <hr>
+
+    <!-- Previous Logs -->
+    <h3>Your Logs</h3>
     <ul>
+    {% if logs %}
         {% for log in logs %}
-            <li><strong>{{ log[0] }}</strong>: {{ log[1] }}</li>
+            <p><strong>{{ log[0] }}</strong>: {{ log[1] }}</p>
         {% endfor %}
+    {% else %}
+        <p>No logs found yet. Start by adding what you did today!</p>
+    {% endif %}
     </ul>
-    <a href="/summaries">📋 View Weekly Summaries</a>
+
+    <!-- Generate Summary Button -->
+    <form action="/generate-summary" method="post">
+        <input type="submit" value="🪄 Generate Weekly Summary">
+    </form>
+
+    <br>
+    <a href="/summaries">📋 View Weekly Summaries</a> |
+    <a href="/logout">🚪 Logout</a>
 </body>
 </html>

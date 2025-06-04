@@ -5,14 +5,40 @@
 </head>
 <body>
     <h1>📋 Weekly Summaries</h1>
-    <ul>
-        {% for s in summaries %}
-            <li>
-                <strong>{{ s[0] }} - {{ s[1] }}</strong><br>
-                {{ s[2] }}
-            </li>
-        {% endfor %}
-    </ul>
+
+    <!-- Weekly Summary Submission Form -->
+    <h2>Submit Weekly Summary</h2>
+    <form action="/submit-summary" method="post">
+        <label for="week_start">Week Start:</label><br>
+        <input type="date" id="week_start" name="week_start" required><br><br>
+
+        <label for="week_end">Week End:</label><br>
+        <input type="date" id="week_end" name="week_end" required><br><br>
+
+        <label for="summary">Summary:</label><br>
+        <textarea id="summary" name="summary" rows="6" cols="50" required></textarea><br><br>
+
+        <input type="submit" value="Submit Summary">
+    </form>
+
+    <hr>
+
+    <!-- Display Existing Weekly Summaries -->
+    <h2>Your Weekly Summaries</h2>
+    {% if summaries %}
+        <ul>
+            {% for s in summaries %}
+                <li>
+                    <strong>{{ s[0] }} - {{ s[1] }}</strong><br>
+                    {{ s[2] }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No summaries submitted yet.</p>
+    {% endif %}
+
+    <br>
     <a href="/">🔙 Back to Logs</a>
 </body>
 </html>
