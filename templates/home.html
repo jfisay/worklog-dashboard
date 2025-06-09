@@ -1,49 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Daily Work Log</title>
-    <style>
-        .form-container { max-width: 400px; margin: auto; }
-        .form-toggle { text-align: center; margin-bottom: 10px; }
-        .hidden { display: none; }
-    </style>
+    <title>Welcome - Work Log</title>
 </head>
 <body>
-    <h1 style="text-align:center;">Welcome to Your Daily Work Log 📒</h1>
-
-    <div class="form-container">
-        <div class="form-toggle">
-            <button onclick="showForm('login')">Login</button>
-            <button onclick="showForm('signup')">Sign Up</button>
-        </div>
-
-        <!-- Login Form -->
-        <form id="loginForm" method="post" action="/login">
-            <h3>Login</h3>
-            <label>Username:</label><br>
-            <input type="text" name="username" required><br>
-            <label>Password:</label><br>
-            <input type="password" name="password" required><br><br>
-            <button type="submit">Login</button>
-        </form>
-
-        <!-- Signup Form -->
-        <form id="signupForm" method="post" action="/signup" class="hidden">
-            <h3>Sign Up</h3>
-            <label>Username:</label><br>
-            <input type="text" name="username" required><br>
-            <label>Password:</label><br>
-            <input type="password" name="password" required><br><br>
-            <button type="submit">Sign Up</button>
-        </form>
-    </div>
-
-    <script>
-        function showForm(formType) {
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('signupForm').classList.add('hidden');
-            document.getElementById(formType + 'Form').classList.remove('hidden');
-        }
-    </script>
+    <h1>Welcome to the Work Log App</h1>
+    <p>Please choose an option:</p>
+    <a href="/login"><button>Login</button></a>
+    <a href="/signup"><button>Sign Up</button></a>
 </body>
 </html>

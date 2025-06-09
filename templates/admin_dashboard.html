@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 style="margin-top: 1rem;">Admin Dashboard</h1>
+
+<!-- 🔍 Search Bar -->
+<div style="margin-top: 1rem; margin-bottom: 1rem;">
+  <input type="text" id="userSearch" placeholder="Search by username, name, or email..."
+         style="padding: 0.5rem; width: 350px;">
+  <button onclick="filterUsers()" style="padding: 0.5rem;">Search</button>
+  <button onclick="clearSearch()" style="padding: 0.5rem; margin-left: 0.5rem;">Clear</button>
+</div>
+
+<!-- 📊 Users Table -->
+<table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+  <thead style="background-color: #f2f2f2;">
+    <tr>
+      <th onclick="sortTable(0, false)" style="cursor: pointer; text-align: left;">Username 🔽</th>
+      <th style="text-align: left;">Full Name</th>
+      <th onclick="sortTable(2, false)" style="cursor: pointer; text-align: left;">Email 🔽</th>
+      <th style="text-align: left;">Phone</th>
+      <th onclick="sortTable(4, true)" style="cursor: pointer; text-align: center;"># Logs 🔽</th>
+      <th style="text-align: center;">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+    <tr>
+      <td>{{ user.username }}</td>
+      <td>{{ user.first_name }} {{ user.last_name }}</td>
+      <td>{{ user.email }}</td>
+      <td>{{ user.phone_number }}</td>
+      <td style="text-align: center;">{{ user.log_count }}</td>
+      <td style="text-align: center;">
+        <a href="/admin/user-logs/{{ user.username }}">View Logs</a><br>
+        {% if user.is_active %}
+          <form action="/admin/deactivate/{{ user.username }}" method="post" style="display: inline;">
+            <button type="submit" style="color: red; background: none; border: none; cursor: pointer;">Deactivate</button>
+          </form>
+        {% else %}
+          <form action="/admin/reactivate/{{ user.username }}" method="post" style="display: inline;">
+            <button type="submit" style="color: green; background: none; border: none; cursor: pointer;">Reactivate</button>
+          </form>
+        {% endif %}
+      </td>
+      
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+    <a href="/admin/audit-logs" style="margin-top: 1rem; display: inline-block;">🔎 View Admin Logs</a>
+
+
+<!-- 🧠 Intelligent Table Behavior -->
+<script>
+  function filterUsers() {
+    const filter = document.getElementById('userSearch').value.toLowerCase();
+    const rows = document.querySelectorAll('tbody tr');
+
+    rows.forEach(row => {
+      const username = row.cells[0].textContent.toLowerCase();
+      const fullName = row.cells[1].textContent.toLowerCase();
+      const email = row.cells[2].textContent.toLowerCase();
+
+      const match = username.includes(filter) || fullName.includes(filter) || email.includes(filter);
+      row.style.display = match ? '' : 'none';
+    });
+  }
+
+  function clearSearch() {
+    document.getElementById('userSearch').value = '';
+    filterUsers();
+  }
+
+  function sortTable(colIndex, isNumeric = false) {
+    const table = document.querySelector("table tbody");
+    const rows = Array.from(table.rows);
+
+    const sorted = rows.sort((a, b) => {
+      const aText = a.cells[colIndex].textContent.trim().toLowerCase();
+      const bText = b.cells[colIndex].textContent.trim().toLowerCase();
+
+      if (isNumeric) {
+        return parseInt(aText) - parseInt(bText);
+      }
+      return aText.localeCompare(bText);
+    });
+
+    // Clear and re-add sorted rows
+    table.innerHTML = '';
+    sorted.forEach(row => table.appendChild(row));
+  }
+</script>
+{% endblock %}

@@ -12,11 +12,19 @@ import base64
 import os
 import re  
 from dotenv import load_dotenv
+from admin import router as admin_router
+from utils import get_db_connection, is_logged_in
+from admin import router as admin_router
+from itsdangerous import URLSafeTimedSerializer
 
 load_dotenv()
 
 ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY").encode()
 fernet = Fernet(ENCRYPTION_KEY)
+
+serializer = URLSafeTimedSerializer(os.getenv("SECRET_KEY"))
+
+
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET"))
@@ -26,17 +34,7 @@ templates = Jinja2Templates(directory="templates")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def get_db_connection():
-    return mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME")
-    )
 
-def is_logged_in(request: Request):
-    return request.session.get("user") is not None
 
 def get_user(username):
     conn = get_db_connection()
@@ -78,14 +76,18 @@ def login(request: Request, username: str = Form(...), password: str = Form(...)
     user = get_user(username)
     
     if not user:
-        # User doesn't exist
         return templates.TemplateResponse("login.html", {
             "request": request,
             "error": "No user found with that username."
         })
     
+    if not user["is_active"]:
+        return templates.TemplateResponse("login.html", {
+            "request": request,
+            "error": "This account is inactive. Please contact an administrator."
+        })
+
     if not pwd_context.verify(password, user["password"]):
-        # Password is wrong
         return templates.TemplateResponse("login.html", {
             "request": request,
             "error": "Incorrect password."
@@ -98,19 +100,30 @@ def login(request: Request, username: str = Form(...), password: str = Form(...)
 def login_form(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
-def create_user(username, hashed_password):
+def create_user(username, hashed_password, first_name, last_name, email, phone_number):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO users (username, password) VALUES (%s, %s)",
-        (username, hashed_password)
+        """
+        INSERT INTO users (username, password, first_name, last_name, email, phone_number)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """,
+        (username, hashed_password, first_name, last_name, email, phone_number)
     )
     conn.commit()
     cursor.close()
     conn.close()
 @app.post("/signup")
-def signup(request: Request, username: str = Form(...), password: str = Form(...)):
-    # Password strength check
+def signup(
+    request: Request,
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    email: str = Form(...),
+    phone_number: str = Form(...),
+    username: str = Form(...),
+    password: str = Form(...)
+):
+    # Password validation...
     if (len(password) < 8 or
         not re.search(r"[A-Z]", password) or
         not re.search(r"[a-z]", password) or
@@ -124,19 +137,19 @@ def signup(request: Request, username: str = Form(...), password: str = Form(...
     # Check for existing user
     existing_user = get_user(username)
     if existing_user:
-        return templates.TemplateResponse("signup.html", {
+        return templates.TemplateResponse("home.html", {
             "request": request,
             "error": "Username already exists."
         })
 
-    # Store user
+    # Hash password and create user
     hashed_pw = pwd_context.hash(password)
-    create_user(username, hashed_pw)
+    create_user(username, hashed_pw, first_name, last_name, email, phone_number)
     request.session["username"] = username
     return RedirectResponse("/", status_code=302)
 @app.get("/signup")
 def signup_form(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+    return templates.TemplateResponse("signup.html", {"request": request})
 
 @app.get("/logout")
 def logout(request: Request):
@@ -260,3 +273,59 @@ def generate_summary(request: Request):
     conn.close()
 
     return RedirectResponse("/summaries", status_code=302)
+
+@app.get("/forgot-password", response_class=HTMLResponse)
+def forgot_password_form(request: Request):
+    return templates.TemplateResponse("forgot_password.html", {"request": request})
+
+
+
+@app.post("/forgot-password")
+def send_reset_email(request: Request, identifier: str = Form(...)):
+    user = get_user(identifier)
+    if not user:
+        return templates.TemplateResponse("forgot_password.html", {
+            "request": request,
+            "error": "User not found."
+        })
+
+    token = serializer.dumps(user["username"], salt="reset-password")
+    reset_link = f"http://localhost:8000/reset-password/{token}" #This might chage when getting deployed
+    # ⛔ Replace this with actual email-sending logic
+    print("Send this reset link:", reset_link)
+
+    return templates.TemplateResponse("forgot_password.html", {
+        "request": request,
+        "message": "Reset link sent. Check your email."
+    })
+
+@app.get("/reset-password/{token}", response_class=HTMLResponse)
+def reset_form(request: Request, token: str):
+    return templates.TemplateResponse("reset_password.html", {
+        "request": request,
+        "token": token
+    })
+
+@app.post("/reset-password")
+def process_reset(request: Request, token: str = Form(...), new_password: str = Form(...)):
+    try:
+        username = serializer.loads(token, max_age=3600)
+    except Exception:
+        return templates.TemplateResponse("reset_password.html", {
+            "request": request,
+            "error": "Reset link expired or invalid.",
+            "token": token
+        })
+
+    hashed = pwd_context.hash(new_password)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET password = %s WHERE username = %s", (hashed, username))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return RedirectResponse("/login", status_code=302)
+# The Admin Router
+#app.include_router(admin_router, prefix="/admin-home")
+app.include_router(admin_router)

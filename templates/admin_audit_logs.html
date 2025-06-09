@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 style="margin-top: 1rem;">Admin Action Logs</h1>
+
+<table border="1" cellpadding="10" cellspacing="0" style="margin-top: 1rem; width: 100%; border-collapse: collapse;">
+  <thead style="background-color: #f2f2f2;">
+    <tr>
+      <th>Admin</th>
+      <th>Action</th>
+      <th>Target User</th>
+      <th>Timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for log in logs %}
+    <tr>
+      <td>{{ log.admin_username }}</td>
+      <td>{{ log.action }}</td>
+      <td>{{ log.target_user }}</td>
+      <td>{{ log.timestamp }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a href="/admin" style="display: inline-block; margin-top: 1rem;">⬅ Back to Dashboard</a>
+{% endblock %}

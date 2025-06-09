@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2 style="margin-top: 1rem;">Logs for {{ username }}</h2>
+
+  {% if logs %}
+    <ul style="margin-top: 1rem; padding-left: 1.5rem;">
+      {% for log in logs %}
+        <li style="margin-bottom: 0.75rem;">
+          <strong>{{ log.log_date }}:</strong> {{ log.entry }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p style="margin-top: 1rem;">No logs found for this user.</p>
+  {% endif %}
+
+  <a href="/admin" style="display: inline-block; margin-top: 1.5rem; color: blue; text-decoration: underline;">Back to Dashboard</a>
+{% endblock %}
